@@ -1,0 +1,94 @@
+---
+# Проверяем наличие требуемых бинарников
+- name: CFSSL | Checking that the cfssl toolkit binaries exists
+  stat:
+    path: "{{ cfssl_toolkit_bin_path }}/{{ item }}"
+    checksum_algorithm: "{{ cfssl_toolkit[cfssl_toolkit_version][item].checksum_algorithm }}"
+  register: cfssl_toolkit_bin
+  loop: "{{ cfssl_toolkit_bin_name }}"
+
+# Блок заданий
+# исполняется если:
+## Использвание downloader сервера включено - use_downloader=true и (Если файла нет на удаленном сервере или Контрольная сумма файла не совпадает с указанной в переменной - cfssl_toolkit[cfssl_toolkit_version].checksum
+- name: CFSSL |(when use_downloader == TRUE)
+  block:
+    # Создаем папку на downloader сервере (в данную папку будет осуществляться скачивание архива из сети интернет)
+    - name: CFSSL | Creating default folder for components
+      file:
+        path: "{{ downloader_source_folder }}"
+        state: directory
+        mode: u+rwx
+      run_once: true
+      delegate_to: "{{ downloader }}"
+
+    # Проверяем наличие файла на downloader сервере
+    - name: CFSSL | Check that the binaries exists on the {{ downloader }}
+      stat:
+        path: "{{ downloader_source_folder }}/{{ cfssl_toolkit[cfssl_toolkit_version][item].source_url | basename }}"
+        checksum_algorithm: "{{ cfssl_toolkit[cfssl_toolkit_version][item].checksum_algorithm }}"
+      register: downloader_binaries
+      run_once: true
+      loop: "{{ cfssl_toolkit_bin_name }}"
+      delegate_to: "{{ downloader }}"
+
+    # Выкачиваем архив напрямую из сети интернет
+    # Если:
+    ## Контрольная сумма файла на downloader не совпадает с указанной в переменной - cfssl_toolkit[cfssl_toolkit_version][item].checksum)
+    - name: CFSSL | Download binaries to {{ downloader }}
+      get_url:
+        url: "{{ cfssl_toolkit[cfssl_toolkit_version][item.0.item].source_url }}"
+        dest: "{{ downloader_source_folder }}"
+        checksum: "{{ cfssl_toolkit[cfssl_toolkit_version][item.0.item].checksum_algorithm }}:{{ cfssl_toolkit[cfssl_toolkit_version][item.0.item].checksum }}"
+      run_once: true
+      delegate_to: "{{ downloader }}"
+      loop: "{{ cfssl_toolkit_bin.results|zip(downloader_binaries.results)|list }}"
+      when:
+        - item.0.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.0.item].checksum
+        - item.1.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.1.item].checksum
+
+    # Выполняем синхронизацию файла с удаленной машиной
+    # Если:
+    ## downloader сервером является другая удаленная машина (не та на которой осуществляется запуск playbook - не localhost)
+    - name: CFSSL | Copy from {{ downloader }} to remote host
+      synchronize:
+        checksum: true
+        src: "{{ downloader_source_folder }}/{{ cfssl_toolkit[cfssl_toolkit_version][item.item].source_url | basename }}"
+        dest: "{{ cfssl_toolkit_bin_path }}/{{ item.item }}"
+      delegate_to: "{{ downloader }}"
+      loop: "{{ cfssl_toolkit_bin.results }}"
+      when:
+        - downloader != "localhost"
+        - item.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.item].checksum
+
+    # Выполняем синхронизацию файла с удаленной машиной
+    # Если:
+    ## downloader сервером является localhost (машина на которой осуществляется запуск playbook)
+    ## Контрольная сумма файла на удаленном сервере не совпадает с указанной в переменной - cfssl_toolkit[cfssl_toolkit_version].checksum)
+    - name: CFSSL | Copy from localhost to remote host
+      copy:
+        src: "{{ downloader_source_folder }}/{{ cfssl_toolkit[cfssl_toolkit_version][item.item].source_url | basename }}"
+        dest: "{{ cfssl_toolkit_bin_path }}/{{ item.item }}"
+        owner: root
+        group: root
+        mode: u+rwx
+      loop: "{{ cfssl_toolkit_bin.results }}"
+      when:
+        - downloader == "localhost"
+        - item.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.item].checksum
+  when:
+    - use_downloader
+
+# Выкачиваем архив напрямую из сети интернет
+# Если:
+## Контрольная сумма файла на downloader не совпадает с указанной в переменной - cfssl_toolkit[cfssl_toolkit_version].item.checksum)
+- name: CFSSL | Download binaries
+  get_url:
+    url: "{{ cfssl_toolkit[cfssl_toolkit_version][item.item].source_url }}"
+    dest: "{{ cfssl_toolkit_bin_path }}/{{ item.item }}"
+    checksum: "{{ cfssl_toolkit[cfssl_toolkit_version][item.item].checksum_algorithm }}:{{ cfssl_toolkit[cfssl_toolkit_version][item.item].checksum }}"
+    owner: root
+    group: root
+  loop: "{{ cfssl_toolkit_bin.results }}"
+  when:
+    - not use_downloader
+    - item.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.item].checksum

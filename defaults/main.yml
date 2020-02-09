@@ -1,0 +1,58 @@
+---
+# Вкл/Выкл использование downloader сервера (актуально если на удаленном хосте нет доступа к сети интернет или же количество хостов на которые необходимо доставить файлы
+use_downloader: true
+# Машина через которую осуществляется выкачивание файлов из сети интернет
+downloader: localhost
+# При использовании downloader в данную папку будет осуществлятся скачивание файлов, в дальнейшем распространение файлов на удаленные хосты осуществляется из данной папки downloader сервера.
+downloader_source_folder: ~/DISTR
+
+# Куда доставить бинарники
+cfssl_toolkit_bin_path: /usr/local/bin
+# Устанавливаемая версия
+cfssl_toolkit_version: v1.4.1
+# Имена устанавливаемых компонентов
+cfssl_toolkit_bin_name:
+  - cfssl-certinfo
+  - cfssl-bundle
+  - cfssl-newkey
+  - cfssl-scan
+  - cfssljson
+  - mkbundle
+  - multirootca
+  - cfssl
+
+# Контрольная сумма архива и бинарников
+cfssl_toolkit:
+  v1.4.1:
+    cfssl-certinfo:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl-certinfo_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: 3dad570f328f8ebb6de2fc65f48fa172898ce3e7f7d00d5d08f7d973089e2357
+    cfssl-bundle:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl-bundle_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: b2711a65885fb56e94f9fce7942b4701467e231f5afb578df9f17a501a8d939e
+    cfssl-newkey:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl-newkey_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: 55425d9dfebcdf5bb2e2bc818e5ca781dbd8d6c239fef710e49d42216ae19afc
+    cfssl-scan:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl-scan_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: e662ad74d18168f379d6eeca7df548a1a2a43c1cd422fd9de00c86cd77a31c56
+    cfssljson:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssljson_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: 05d67e05cacb8b2e78e737637acdcf9127b0732f0c4104403e9e9b74032fd685
+    mkbundle:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/mkbundle_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: 1dd334894ac8d6267f91548c5baf26e1f48181df2f9178690795c00d36364570
+    multirootca:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/multirootca_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: f608743fe19db77593c3ba326eea7baa7f98fef2fe0cd70261e92883d0f6bf26
+    cfssl:
+      source_url: https://github.com/cloudflare/cfssl/releases/download/v1.4.1/cfssl_1.4.1_linux_amd64
+      checksum_algorithm: "sha256"
+      checksum: d01a26bc88851aab4c986e820e7b3885cedf1316a9c26a98fbba83105cfd7b87

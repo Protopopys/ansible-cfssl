@@ -1,0 +1,25 @@
+---
+galaxy_info:
+  author: Kirill Protopopov
+  description: Ansible role for installing CFSSL toolkit
+
+  license: GPLv3
+
+  min_ansible_version: 2.8
+
+  platforms:
+    - name: Fedora
+      versions: all
+
+    - name: EL
+      versions:
+        - 7
+        - 8
+
+  galaxy_tags:
+    - cfssl
+    - cfssltoolkit
+    - ssl
+    - selfsigned
+
+dependencies: []

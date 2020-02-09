@@ -1,0 +1,4 @@
+---
+# Импортируем задание установки бинарников cfssl toolkit 
+- name: CFSSL | Importing an installation task
+  import_tasks: "installing_cfssl_toolkit.yml"
