@@ -19,7 +19,7 @@
         state: directory
         mode: u+rwx
       run_once: true
-      delegate_to: "{{ downloader }}"
+      delegate_to: localhost
 
     # Проверяем наличие файла на downloader сервере
     - name: CFSSL | Check that the binaries exists on the {{ downloader }}
@@ -29,7 +29,7 @@
       register: downloader_binaries
       run_once: true
       loop: "{{ cfssl_toolkit_bin_name }}"
-      delegate_to: "{{ downloader }}"
+      delegate_to: localhost
 
     # Выкачиваем архив напрямую из сети интернет
     # Если:
@@ -40,25 +40,11 @@
         dest: "{{ downloader_source_folder }}"
         checksum: "{{ cfssl_toolkit[cfssl_toolkit_version][item.0.item].checksum_algorithm }}:{{ cfssl_toolkit[cfssl_toolkit_version][item.0.item].checksum }}"
       run_once: true
-      delegate_to: "{{ downloader }}"
+      delegate_to: localhost
       loop: "{{ cfssl_toolkit_bin.results|zip(downloader_binaries.results)|list }}"
       when:
         - item.0.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.0.item].checksum
         - item.1.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.1.item].checksum
-
-    # Выполняем синхронизацию файла с удаленной машиной
-    # Если:
-    ## downloader сервером является другая удаленная машина (не та на которой осуществляется запуск playbook - не localhost)
-    - name: CFSSL | Copy from {{ downloader }} to remote host
-      synchronize:
-        checksum: true
-        src: "{{ downloader_source_folder }}/{{ cfssl_toolkit[cfssl_toolkit_version][item.item].source_url | basename }}"
-        dest: "{{ cfssl_toolkit_bin_path }}/{{ item.item }}"
-      delegate_to: "{{ downloader }}"
-      loop: "{{ cfssl_toolkit_bin.results }}"
-      when:
-        - downloader != "localhost"
-        - item.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.item].checksum
 
     # Выполняем синхронизацию файла с удаленной машиной
     # Если:
@@ -72,9 +58,7 @@
         group: root
         mode: u+rwx
       loop: "{{ cfssl_toolkit_bin.results }}"
-      when:
-        - downloader == "localhost"
-        - item.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.item].checksum
+      when: item.stat.checksum|default() != cfssl_toolkit[cfssl_toolkit_version][item.item].checksum
   when:
     - use_downloader
 
