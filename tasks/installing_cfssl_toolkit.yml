@@ -22,7 +22,7 @@
       delegate_to: localhost
 
     # Проверяем наличие файла на downloader сервере
-    - name: CFSSL | Check that the binaries exists on the {{ downloader }}
+    - name: CFSSL | Check that the binaries exists on the localhost
       stat:
         path: "{{ downloader_source_folder }}/{{ cfssl_toolkit[cfssl_toolkit_version][item].source_url | basename }}"
         checksum_algorithm: "{{ cfssl_toolkit[cfssl_toolkit_version][item].checksum_algorithm }}"
@@ -34,7 +34,7 @@
     # Выкачиваем архив напрямую из сети интернет
     # Если:
     ## Контрольная сумма файла на downloader не совпадает с указанной в переменной - cfssl_toolkit[cfssl_toolkit_version][item].checksum)
-    - name: CFSSL | Download binaries to {{ downloader }}
+    - name: CFSSL | Download binaries to localhost
       get_url:
         url: "{{ cfssl_toolkit[cfssl_toolkit_version][item.0.item].source_url }}"
         dest: "{{ downloader_source_folder }}"
